@@ -4,12 +4,13 @@ import Model.History;
 import Model.Logs;
 import Model.Product;
 import Model.User;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.spec.KeySpec;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.Base64;
 
 public class SQLite {
     
@@ -178,6 +179,24 @@ public class SQLite {
             System.out.print(ex);
         }
     }
+
+    public static String hashPassword(char[] password,byte[] salt){
+        KeySpec secret = new PBEKeySpec(password,salt, 65535, 128);
+
+        try{
+            SecretKeyFactory fact = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+            byte[] hashed = fact.generateSecret(secret).getEncoded();
+
+            String hash = Base64.getEncoder().encodeToString(hashed);
+            String ssalt = Base64.getEncoder().encodeToString(salt);
+            return hash+ssalt;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return "";
+    }
     
     public void addUser(String username, String password) {
         String sql = "INSERT INTO users(username,password) VALUES('" + username + "','" + password + "')";
@@ -196,8 +215,62 @@ public class SQLite {
             System.out.print(ex);
         }
     }
-    
-    
+
+    public boolean checkUserCredentials(String username, String password){
+        String sql = "SELECT id, username, password, role, locked FROM users WHERE username=? AND password=?";
+        User user = new User();
+
+        try{
+            Connection conn = DriverManager.getConnection(driverURL);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                user = new User(rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getInt("role"),
+                        rs.getInt("locked"));
+            }
+            String s = user.getPassword().substring(24);
+            byte[] salt = s.getBytes();
+            if (user.getPassword().equals(hashPassword((password+s).toCharArray(),salt)))
+                return true;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean checkUsername(String username){
+        String sql = "SELECT id, username FROM users where username=?";
+        User user = new User();
+
+        try{
+            Connection conn = DriverManager.getConnection(driverURL);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, username);
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                user = new User(rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getInt("role"),
+                        rs.getInt("locked"));
+            }
+            if(user.getId() != 0)
+                return true;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+
+    }
     public ArrayList<History> getHistory(){
         String sql = "SELECT id, username, name, stock, timestamp FROM history";
         ArrayList<History> histories = new ArrayList<History>();
