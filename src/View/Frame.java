@@ -4,7 +4,12 @@ import Controller.Main;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import javax.crypto.SecretKeyFactory;
 import javax.swing.WindowConstants;
+import java.security.spec.KeySpec;
+import java.util.Base64;
+import java.util.Random;
+import javax.crypto.spec.PBEKeySpec;
 
 public class Frame extends javax.swing.JFrame {
 
@@ -214,7 +219,7 @@ public class Frame extends javax.swing.JFrame {
     
     private CardLayout contentView = new CardLayout();
     private CardLayout frameView = new CardLayout();
-    
+    private int attempts = 0;
     public void init(Main controller){
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setTitle("CSSECDV - SECURITY Svcs");
@@ -255,9 +260,48 @@ public class Frame extends javax.swing.JFrame {
     public void registerNav(){
         frameView.show(Container, "registerPnl");
     }
-    
-    public void registerAction(String username, String password, String confpass){
-        main.sqlite.addUser(username, password);
+
+    public void registerAction(String username, String password, String confpass) {
+        username = username.toLowerCase();
+        String strengthCondition = "^(?=.*[A-Z])+(?=.*[!@#$%^&*()\\-_+.])+(?=.*[0-9])+(?=.*[a-z])*.{8,}$";
+        //Atleast one uppercase letter, a special character, a digit and length 8
+        boolean comp = true;
+        if (!password.equals(confpass)) {
+            comp = false;
+            //Show error message (Non-equal passwords)
+        }
+        if (!password.matches(strengthCondition)){
+            comp = false;
+            //Show error message Weak password
+        }
+        if (!main.sqlite.checkUsername(username)) {
+            //Show error message Non unique username
+            comp = false;
+        }
+        //hash and salt password here
+        Random random = new Random();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        password = main.sqlite.hashPassword(password.toCharArray(),salt);
+        if (password.equals("")){
+            comp = false;
+            //Error in hashing
+        }
+        if (comp) {
+            main.sqlite.addUser(username, password);
+            loginNav();
+        }
+
+    }
+    public void checkCredentials(String username, String password){
+        //password hashing+salt
+        if (main.sqlite.checkUserCredentials(username,password)){
+            mainNav();
+        }
+        else{
+            //Show error message;
+            attempts+=1;
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
