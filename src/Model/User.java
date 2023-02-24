@@ -19,7 +19,11 @@ public class User {
         this.role = role;
         this.locked = locked;
     }
-    
+
+    public User() {
+
+    }
+
     public int getId() {
         return id;
     }
