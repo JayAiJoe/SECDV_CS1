@@ -1,6 +1,9 @@
 
 package View;
 
+import java.awt.event.MouseAdapter;
+import javax.swing.JOptionPane;
+
 public class Login extends javax.swing.JPanel {
 
     public Frame frame;
@@ -18,6 +21,8 @@ public class Login extends javax.swing.JPanel {
         passwordFld = new javax.swing.JPasswordField();
         registerBtn = new javax.swing.JButton();
         loginBtn = new javax.swing.JButton();
+        messageField = new javax.swing.JTextField();
+        forgotButton = new javax.swing.JButton();
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -50,28 +55,61 @@ public class Login extends javax.swing.JPanel {
             }
         });
 
+        messageField.setEditable(false);
+        messageField.setForeground(new java.awt.Color(242, 0, 0));
+        messageField.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        messageField.setToolTipText("");
+        messageField.setBorder(null);
+        messageField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                messageFieldActionPerformed(evt);
+            }
+        });
+
+        forgotButton.setForeground(new java.awt.Color(2, 136, 209));
+        forgotButton.setText("forgot password?");
+        forgotButton.setToolTipText("");
+        forgotButton.setBorder(null);
+        forgotButton.setBorderPainted(false);
+        forgotButton.setContentAreaFilled(false);
+        forgotButton.setFocusPainted(false);
+        forgotButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        forgotButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                forgotButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(200, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(registerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(loginBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(usernameFld)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(passwordFld, javax.swing.GroupLayout.Alignment.LEADING))
-                .addContainerGap(200, Short.MAX_VALUE))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(forgotButton))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(200, 200, 200)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(messageField)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(registerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(loginBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(usernameFld, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(passwordFld))))
+                .addGap(200, 200, 200))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap(88, Short.MAX_VALUE)
+                .addContainerGap(97, Short.MAX_VALUE)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(50, 50, 50)
+                .addGap(18, 18, 18)
+                .addComponent(messageField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
                 .addComponent(usernameFld, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(passwordFld, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -79,13 +117,15 @@ public class Login extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(registerBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(loginBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(126, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(forgotButton)
+                .addContainerGap(95, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     private void loginBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginBtnActionPerformed
         frame.checkCredentials(usernameFld.getText(),passwordFld.getText());
-        usernameFld.setText("");
-        passwordFld.setText("");
+        //usernameFld.setText("");
+        //passwordFld.setText("");
         //frame.mainNav();
     }//GEN-LAST:event_loginBtnActionPerformed
 
@@ -93,12 +133,36 @@ public class Login extends javax.swing.JPanel {
         frame.registerNav();
     }//GEN-LAST:event_registerBtnActionPerformed
 
+    private void messageFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_messageFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_messageFieldActionPerformed
+
+    private void forgotButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_forgotButtonActionPerformed
+        JOptionPane.showMessageDialog(null, "Contact admin to reset password.", "Password Reset", JOptionPane.OK_OPTION);
+    }//GEN-LAST:event_forgotButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton forgotButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JButton loginBtn;
+    private javax.swing.JTextField messageField;
     private javax.swing.JTextField passwordFld;
     private javax.swing.JButton registerBtn;
     private javax.swing.JTextField usernameFld;
     // End of variables declaration//GEN-END:variables
+
+    public void setMessage(String msg){
+        messageField.setText(msg);
+    }
+    
+    public void clearInfo(){
+        usernameFld.setText("");
+        passwordFld.setText("");
+    }
+    
+    public void showAttemptWarning(){
+        JOptionPane.showMessageDialog(null, "You have exceeded the limit for failed login attempts. Try again later or contact admin.", "Invalid Login Limit Exceeded", JOptionPane.OK_OPTION);
+    }
+
 }

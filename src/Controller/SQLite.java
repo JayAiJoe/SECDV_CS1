@@ -218,6 +218,7 @@ public class SQLite {
 
     public boolean checkUserCredentials(String username, String password){
         String sql = "SELECT id, username, password, role, locked FROM users WHERE username=? AND password=?";
+        //String sql = "SELECT id, username, password, role, locked FROM users WHERE username=?";
         User user = new User();
 
         try{
@@ -234,10 +235,21 @@ public class SQLite {
                         rs.getInt("role"),
                         rs.getInt("locked"));
             }
+
+            if(user.getId() != 0){
+                user.setLocked(0);
+                return true;
+            }
+                
+            /*
             String s = user.getPassword().substring(24);
             byte[] salt = s.getBytes();
+            
+            System.out.println(user.getPassword());
+            System.out.println(hashPassword((password+s).toCharArray(),salt));
             if (user.getPassword().equals(hashPassword((password+s).toCharArray(),salt)))
                 return true;
+            */
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -375,6 +387,34 @@ public class SQLite {
             System.out.print(ex);
         }
     }
+    
+    public boolean getUserLocked(String username){
+        String sql = "SELECT locked FROM users WHERE username='" + username + "';";
+        boolean locked = false;
+        
+        try (Connection conn = DriverManager.getConnection(driverURL);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)){
+                locked = rs.getInt("locked") >= 5;
+        }catch (Exception ex) {
+            System.out.print(ex);
+        }
+        return locked;
+    }
+    
+    
+    public void incrementLoginAttempt(String username) {
+        String sql = "UPDATE users SET locked = locked + 1  WHERE username='" + username + "';";
+        
+        try (Connection conn = DriverManager.getConnection(driverURL);
+            Statement stmt = conn.createStatement()){
+            stmt.execute(sql);
+            
+        } catch (Exception ex) {
+            System.out.print(ex);
+        }
+    }
+    
     
     public Product getProduct(String name){
         String sql = "SELECT name, stock, price FROM product WHERE name='" + name + "';";

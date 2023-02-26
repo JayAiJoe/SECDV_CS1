@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import javax.crypto.SecretKeyFactory;
 import javax.swing.WindowConstants;
 import java.security.spec.KeySpec;
+import java.sql.Timestamp;
 import java.util.Base64;
 import java.util.Random;
 import javax.crypto.spec.PBEKeySpec;
@@ -205,7 +206,7 @@ public class Frame extends javax.swing.JFrame {
     }//GEN-LAST:event_clientBtnActionPerformed
 
     private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutBtnActionPerformed
-        frameView.show(Container, "loginPnl");
+        loginNav();
     }//GEN-LAST:event_logoutBtnActionPerformed
 
     public Main main;
@@ -255,10 +256,14 @@ public class Frame extends javax.swing.JFrame {
     
     public void loginNav(){
         frameView.show(Container, "loginPnl");
+        loginPnl.clearInfo();
+        loginPnl.setMessage("");
     }
     
     public void registerNav(){
         frameView.show(Container, "registerPnl");
+        registerPnl.clearInfo();
+        registerPnl.setMessage("",0);
     }
 
     public void registerAction(String username, String password, String confpass) {
@@ -269,14 +274,17 @@ public class Frame extends javax.swing.JFrame {
         if (!password.equals(confpass)) {
             comp = false;
             //Show error message (Non-equal passwords)
+            registerPnl.setMessage("Password and confirm password must match.", 0);
         }
         if (!password.matches(strengthCondition)){
             comp = false;
             //Show error message Weak password
+            registerPnl.setMessage("Password must have 1 uppercase letter,special character, and digit and length 8.", 0);
         }
-        if (!main.sqlite.checkUsername(username)) {
+        if (main.sqlite.checkUsername(username)) {
             //Show error message Non unique username
             comp = false;
+            registerPnl.setMessage("Username is already taken.", 0);
         }
         //hash and salt password here
         Random random = new Random();
@@ -289,17 +297,33 @@ public class Frame extends javax.swing.JFrame {
         }
         if (comp) {
             main.sqlite.addUser(username, password);
-            loginNav();
+            registerPnl.setMessage("Successfully registered.", 1);
+            main.sqlite.addLogs("REGISTER", username, "Successful account creation", (new Timestamp(System.currentTimeMillis())).toString());
+            //loginNav();
         }
 
     }
     public void checkCredentials(String username, String password){
         //password hashing+salt
-        if (main.sqlite.checkUserCredentials(username,password)){
+        if(main.sqlite.getUserLocked(username)){
+            loginPnl.showAttemptWarning();
+            return;
+        }
+        
+    
+        
+        
+        if(main.sqlite.checkUserCredentials(username,password)){
+            loginPnl.setMessage("Successfully logged in.");
+            main.sqlite.addLogs("LOGIN", username, "Successful login", (new Timestamp(System.currentTimeMillis())).toString());
             mainNav();
         }
         else{
             //Show error message;
+            loginPnl.setMessage("Invalid username or password.");
+            main.sqlite.addLogs("LOGIN", username, "Invalid login", (new Timestamp(System.currentTimeMillis())).toString());
+            main.sqlite.incrementLoginAttempt(username);
+        
             attempts+=1;
         }
     }
