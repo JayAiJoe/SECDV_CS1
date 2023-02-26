@@ -270,48 +270,50 @@ public class Frame extends javax.swing.JFrame {
         username = username.toLowerCase();
         String strengthCondition = "^(?=.*[A-Z])+(?=.*[!@#$%^&*()\\-_+.])+(?=.*[0-9])+(?=.*[a-z])*.{8,}$";
         //Atleast one uppercase letter, a special character, a digit and length 8
-        boolean comp = true;
+        
+        if (username.equals("")) {
+            registerPnl.setMessage("Enter a username.", 0);
+            return;
+        }
+        if (password.equals("")) {
+            registerPnl.setMessage("Enter a password.", 0);
+            return;
+        }
         if (!password.equals(confpass)) {
-            comp = false;
-            //Show error message (Non-equal passwords)
             registerPnl.setMessage("Password and confirm password must match.", 0);
+            return;
         }
         if (!password.matches(strengthCondition)){
-            comp = false;
-            //Show error message Weak password
             registerPnl.setMessage("Password must have 1 uppercase letter,special character, and digit and length 8.", 0);
+            return;
         }
         if (main.sqlite.checkUsername(username)) {
-            //Show error message Non unique username
-            comp = false;
             registerPnl.setMessage("Username is already taken.", 0);
+            return;
         }
         //hash and salt password here
         Random random = new Random();
         byte[] salt = new byte[16];
         random.nextBytes(salt);
         password = main.sqlite.hashPassword(password.toCharArray(),salt);
+        
         if (password.equals("")){
-            comp = false;
-            //Error in hashing
-        }
-        if (comp) {
-            main.sqlite.addUser(username, password);
-            registerPnl.setMessage("Successfully registered.", 1);
-            main.sqlite.addLogs("REGISTER", username, "Successful account creation", (new Timestamp(System.currentTimeMillis())).toString());
-            //loginNav();
-        }
-
-    }
-    public void checkCredentials(String username, String password){
-        //password hashing+salt
-        if(main.sqlite.getUserLocked(username)){
-            loginPnl.showAttemptWarning();
+            registerPnl.setMessage("Unexpected error. Try again.", 0);
             return;
         }
-        
-    
-        
+
+        main.sqlite.addUser(username, password);
+        registerPnl.setMessage("Successfully registered.", 1);
+        main.sqlite.addLogs("REGISTER", username, "Successful account creation", (new Timestamp(System.currentTimeMillis())).toString());
+        registerPnl.clearInfo();
+        //loginNav();
+    }
+    public void checkCredentials(String username, String password){
+        if(main.sqlite.getUserLocked(username)){
+            loginPnl.showAttemptWarning();
+            main.sqlite.addLogs("LOGIN", username, "Attempted login on locked account", (new Timestamp(System.currentTimeMillis())).toString());
+            return;
+        }
         
         if(main.sqlite.checkUserCredentials(username,password)){
             loginPnl.setMessage("Successfully logged in.");
@@ -322,7 +324,7 @@ public class Frame extends javax.swing.JFrame {
             //Show error message;
             loginPnl.setMessage("Invalid username or password.");
             main.sqlite.addLogs("LOGIN", username, "Invalid login", (new Timestamp(System.currentTimeMillis())).toString());
-            main.sqlite.incrementLoginAttempt(username);
+            main.sqlite.incrementUserLocked(username);
         
             attempts+=1;
         }

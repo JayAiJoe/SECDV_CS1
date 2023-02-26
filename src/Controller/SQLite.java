@@ -159,11 +159,15 @@ public class SQLite {
     }
     
     public void addLogs(String event, String username, String desc, String timestamp) {
-        String sql = "INSERT INTO logs(event,username,desc,timestamp) VALUES('" + event + "','" + username + "','" + desc + "','" + timestamp + "')";
+        String sql = "INSERT INTO logs(event,username,desc,timestamp) VALUES(?,?,?,?)";
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()){
-            stmt.execute(sql);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, event);
+                pstmt.setString(2, username);
+                pstmt.setString(3, desc);
+                pstmt.setString(4, timestamp);
+                pstmt.executeUpdate();
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -199,11 +203,13 @@ public class SQLite {
     }
     
     public void addUser(String username, String password) {
-        String sql = "INSERT INTO users(username,password) VALUES('" + username + "','" + password + "')";
+        String sql = "INSERT INTO users(username,password) VALUES(?,?)";
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()){
-            stmt.execute(sql);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, password);
+                pstmt.executeUpdate();
             
 //      PREPARED STATEMENT EXAMPLE
 //      String sql = "INSERT INTO users(username,password) VALUES(?,?)";
@@ -217,15 +223,15 @@ public class SQLite {
     }
 
     public boolean checkUserCredentials(String username, String password){
-        String sql = "SELECT id, username, password, role, locked FROM users WHERE username=? AND password=?";
-        //String sql = "SELECT id, username, password, role, locked FROM users WHERE username=?";
+        //String sql = "SELECT id, username, password, role, locked FROM users WHERE username=? AND password=?";
+        String sql = "SELECT id, username, password, role, locked FROM users WHERE username=?";
         User user = new User();
 
         try{
             Connection conn = DriverManager.getConnection(driverURL);
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, username);
-            pstmt.setString(2, password);
+           // pstmt.setString(2, password);
 
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -237,19 +243,14 @@ public class SQLite {
             }
 
             if(user.getId() != 0){
-                user.setLocked(0);
-                return true;
+                String s = user.getPassword().substring(24);
+                //byte[] salt = s.getBytes();
+                byte[] salt = Base64.getDecoder().decode(s);
+                if (user.getPassword().equals(hashPassword(password.toCharArray(),salt))){
+                    resetUserLocked(user.getUsername());
+                    return true;
+                }
             }
-                
-            /*
-            String s = user.getPassword().substring(24);
-            byte[] salt = s.getBytes();
-            
-            System.out.println(user.getPassword());
-            System.out.println(hashPassword((password+s).toCharArray(),salt));
-            if (user.getPassword().equals(hashPassword((password+s).toCharArray(),salt)))
-                return true;
-            */
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -269,10 +270,7 @@ public class SQLite {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 user = new User(rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getInt("role"),
-                        rs.getInt("locked"));
+                        rs.getString("username"));
             }
             if(user.getId() != 0)
                 return true;
@@ -365,36 +363,39 @@ public class SQLite {
     }
     
     public void addUser(String username, String password, int role) {
-        String sql = "INSERT INTO users(username,password,role) VALUES('" + username + "','" + password + "','" + role + "')";
+        String sql = "INSERT INTO users(username,password,role) VALUES(?,?,?)";
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()){
-            stmt.execute(sql);
-            
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, password);
+                pstmt.setInt(3, role);
+                pstmt.executeUpdate();
         } catch (Exception ex) {
             System.out.print(ex);
         }
     }
     
     public void removeUser(String username) {
-        String sql = "DELETE FROM users WHERE username='" + username + "';";
+        String sql = "DELETE FROM users WHERE username=?";
 
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
-            System.out.println("User " + username + " has been deleted.");
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.executeUpdate();
         } catch (Exception ex) {
             System.out.print(ex);
         }
     }
     
     public boolean getUserLocked(String username){
-        String sql = "SELECT locked FROM users WHERE username='" + username + "';";
+        String sql = "SELECT locked FROM users WHERE username=?";
         boolean locked = false;
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)){
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                ResultSet rs = pstmt.executeQuery();
                 locked = rs.getInt("locked") >= 5;
         }catch (Exception ex) {
             System.out.print(ex);
@@ -402,14 +403,25 @@ public class SQLite {
         return locked;
     }
     
-    
-    public void incrementLoginAttempt(String username) {
-        String sql = "UPDATE users SET locked = locked + 1  WHERE username='" + username + "';";
+    public void resetUserLocked(String username){
+        String sql = "UPDATE users SET locked = 0  WHERE username=?";
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()){
-            stmt.execute(sql);
-            
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.executeUpdate();
+        } catch (Exception ex) {
+            System.out.print(ex);
+        }
+    }
+    
+    public void incrementUserLocked(String username) {
+        String sql = "UPDATE users SET locked = locked + 1  WHERE username=?";
+        
+        try (Connection conn = DriverManager.getConnection(driverURL);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.executeUpdate();
         } catch (Exception ex) {
             System.out.print(ex);
         }
