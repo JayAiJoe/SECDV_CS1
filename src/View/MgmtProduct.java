@@ -35,7 +35,7 @@ public class MgmtProduct extends javax.swing.JPanel {
 //        deleteBtn.setVisible(false);
     }
 
-    public void init(){
+    public void init(int role){
         //      CLEAR TABLE
         for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
             tableModel.removeRow(0);
@@ -48,6 +48,28 @@ public class MgmtProduct extends javax.swing.JPanel {
                 products.get(nCtr).getName(), 
                 products.get(nCtr).getStock(), 
                 products.get(nCtr).getPrice()});
+        }
+        
+        // Authorization
+        setAccessibleFeatures(role);
+    }
+    
+    public void setAccessibleFeatures(int role) {
+        purchaseBtn.setVisible(false);
+        addBtn.setVisible(false);
+        editBtn.setVisible(false);
+        deleteBtn.setVisible(false);
+        
+        switch(role){
+            case 2:
+                purchaseBtn.setVisible(true);
+                break;
+            case 3:
+            case 4:
+                addBtn.setVisible(true);
+                editBtn.setVisible(true);
+                deleteBtn.setVisible(true);
+                break;
         }
     }
     

@@ -32,6 +32,7 @@ public class Frame extends javax.swing.JFrame {
         staffBtn = new javax.swing.JButton();
         clientBtn = new javax.swing.JButton();
         logoutBtn = new javax.swing.JButton();
+        accountBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(153, 153, 153));
@@ -108,6 +109,16 @@ public class Frame extends javax.swing.JFrame {
             }
         });
 
+        accountBtn.setBackground(new java.awt.Color(250, 250, 250));
+        accountBtn.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        accountBtn.setText("Account");
+        accountBtn.setFocusable(false);
+        accountBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                accountBtnActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout NavigationLayout = new javax.swing.GroupLayout(Navigation);
         Navigation.setLayout(NavigationLayout);
         NavigationLayout.setHorizontalGroup(
@@ -120,7 +131,8 @@ public class Frame extends javax.swing.JFrame {
                     .addComponent(managerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(staffBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(clientBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(logoutBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(logoutBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(accountBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         NavigationLayout.setVerticalGroup(
@@ -136,6 +148,8 @@ public class Frame extends javax.swing.JFrame {
                 .addComponent(staffBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(clientBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(accountBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 139, Short.MAX_VALUE)
                 .addComponent(logoutBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -209,6 +223,10 @@ public class Frame extends javax.swing.JFrame {
         loginNav();
     }//GEN-LAST:event_logoutBtnActionPerformed
 
+    private void accountBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accountBtnActionPerformed
+        contentView.show(Content, "accountHomePnl");
+    }//GEN-LAST:event_accountBtnActionPerformed
+
     public Main main;
     public Login loginPnl = new Login();
     public Register registerPnl = new Register();
@@ -217,6 +235,7 @@ public class Frame extends javax.swing.JFrame {
     private ManagerHome managerHomePnl = new ManagerHome();
     private StaffHome staffHomePnl = new StaffHome();
     private ClientHome clientHomePnl = new ClientHome();
+    private AccountHome accountHomePnl = new AccountHome();
     
     private CardLayout contentView = new CardLayout();
     private CardLayout frameView = new CardLayout();
@@ -234,6 +253,7 @@ public class Frame extends javax.swing.JFrame {
         clientHomePnl.init(main.sqlite);
         managerHomePnl.init(main.sqlite);
         staffHomePnl.init(main.sqlite);
+        accountHomePnl.init(main.sqlite);
         
         Container.setLayout(frameView);
         Container.add(loginPnl, "loginPnl");
@@ -246,6 +266,7 @@ public class Frame extends javax.swing.JFrame {
         Content.add(managerHomePnl, "managerHomePnl");
         Content.add(staffHomePnl, "staffHomePnl");
         Content.add(clientHomePnl, "clientHomePnl");
+        Content.add(accountHomePnl, "accountHomePnl");
         
         this.setVisible(true);
     }
@@ -335,6 +356,7 @@ public class Frame extends javax.swing.JFrame {
     private javax.swing.JPanel Content;
     private javax.swing.JPanel HomePnl;
     private javax.swing.JPanel Navigation;
+    private javax.swing.JButton accountBtn;
     private javax.swing.JButton adminBtn;
     private javax.swing.JButton clientBtn;
     private javax.swing.JLabel jLabel1;
