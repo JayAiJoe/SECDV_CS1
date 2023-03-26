@@ -15,7 +15,8 @@ import java.util.Base64;
 public class SQLite {
     
     public int DEBUG_MODE = 0;
-    String driverURL = "jdbc:sqlite:" + "database.db";
+    //String driverURL = "jdbc:sqlite:" + "database.db";
+    String driverURL = "jdbc:sqlite::resource:database.db";
     
     public void createNewDatabase() {
         try (Connection conn = DriverManager.getConnection(driverURL)) {
