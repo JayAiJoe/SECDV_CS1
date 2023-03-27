@@ -7,7 +7,10 @@ package View;
 
 import Controller.SQLite;
 import Model.Logs;
+import Model.Session;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -18,6 +21,7 @@ public class MgmtLogs extends javax.swing.JPanel {
 
     public SQLite sqlite;
     public DefaultTableModel tableModel;
+    private Session session;
     
     public MgmtLogs(SQLite sqlite) {
         initComponents();
@@ -30,7 +34,9 @@ public class MgmtLogs extends javax.swing.JPanel {
 //        debugBtn.setVisible(false);
     }
 
-    public void init(){
+    public void init(Session session){
+        
+        this.session = session;
         //      CLEAR TABLE
         for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
             tableModel.removeRow(0);
@@ -135,7 +141,16 @@ public class MgmtLogs extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void clearBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearBtnActionPerformed
+        if(session.getRole() != 5)
+            return;
         
+        int result = JOptionPane.showConfirmDialog(null, "Are you sure you want to clear the logs?", "CLEAR LOGS", JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                sqlite.dropLogsTable();
+                sqlite.createLogsTable();
+                sqlite.addLogs("LOGS", session.getUsername(), "Logs cleared by admin" , (new Timestamp(System.currentTimeMillis())).toString());
+                init(session);
+            }
     }//GEN-LAST:event_clearBtnActionPerformed
 
     private void debugBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_debugBtnActionPerformed

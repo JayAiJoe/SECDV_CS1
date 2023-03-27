@@ -4,9 +4,13 @@
  */
 package View;
 
+import static Controller.Main.main;
 import Controller.SQLite;
+import Model.Session;
 import Model.User;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Random;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -18,6 +22,7 @@ import javax.swing.JTextField;
 public class AccountHome extends javax.swing.JPanel {
     
     public SQLite sqlite;
+    private Session session;
 
     /**
      * Creates new form AccountHome
@@ -29,7 +34,12 @@ public class AccountHome extends javax.swing.JPanel {
     
     public void init(SQLite sqlite){
         this.sqlite = sqlite;
-        userLabel.setText("Hans");
+    }
+    
+    public void setSession(Session session){
+        this.session = session;
+        if(session != null)
+            userLabel.setText(session.getUsername());
     }
 
     /**
@@ -79,24 +89,51 @@ public class AccountHome extends javax.swing.JPanel {
 
     private void changePassBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePassBtnActionPerformed
 
+        String strengthCondition = "^(?=.*[A-Z])+(?=.*[!@#$%^&*()\\-_+.])+(?=.*[0-9])+(?=.*[a-z])*.{8,}$";
+        
+        JTextField oldPassword = new JPasswordField();
         JTextField password = new JPasswordField();
         JTextField confpass = new JPasswordField();
-        designer(password, "PASSWORD");
-        designer(confpass, "CONFIRM PASSWORD");
+        designer(oldPassword, "OLD PASSWORD");
+        designer(password, "NEW PASSWORD");
+        designer(confpass, "CONFIRM NEW PASSWORD");
             
         Object[] message = {
-            "Enter New Password:", password, confpass
+            "Enter New Password:", oldPassword, password, confpass
         };
 
         int result = JOptionPane.showConfirmDialog(null, message, "CHANGE PASSWORD", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null);
             
         if (result == JOptionPane.OK_OPTION) {
-            System.out.println(password.getText());
-            System.out.println(confpass.getText());
+            //System.out.println(password.getText());
+            //System.out.println(confpass.getText());
+            if(!password.getText().equals(confpass.getText())){
+                JOptionPane.showMessageDialog(null, "New password and confirm password must match.", "Password Change", JOptionPane.OK_OPTION);
+                return;
+            }
+            if (!password.getText().matches(strengthCondition)){
+                JOptionPane.showMessageDialog(null, "Password must have 1 uppercase letter,special character, and digit and length 8.", "Password Change", JOptionPane.OK_OPTION);
+                return;
+            }
+            if(!sqlite.checkUserCredentials(session.getUsername(),oldPassword.getText())){
+                JOptionPane.showMessageDialog(null, "Please enter your current password.", "Password Change", JOptionPane.OK_OPTION);
+                return;
+            }
+            
+                
+            
+            Random random = new Random();
+            byte[] salt = new byte[16];
+            random.nextBytes(salt);
+            String newPass  = sqlite.hashPassword(password.getText().toCharArray(),salt);
+            
+            sqlite.updatePassword(session.getUsername(), newPass);
+            sqlite.addLogs("PASSWORD", session.getUsername(), "Successfully changed own password", (new Timestamp(System.currentTimeMillis())).toString());
+            JOptionPane.showMessageDialog(null, "Password successfully changed.", "Password Change", JOptionPane.OK_OPTION);
+            
         }
-        
     }//GEN-LAST:event_changePassBtnActionPerformed
-
+    
     public void designer(JTextField component, String text){
         component.setSize(70, 600);
         component.setFont(new java.awt.Font("Tahoma", 0, 18));

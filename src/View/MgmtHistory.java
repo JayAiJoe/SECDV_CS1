@@ -8,6 +8,7 @@ package View;
 import Controller.SQLite;
 import Model.History;
 import Model.Product;
+import Model.Session;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -21,7 +22,7 @@ public class MgmtHistory extends javax.swing.JPanel {
 
     public SQLite sqlite;
     public DefaultTableModel tableModel;
-    private int current_role = -1;
+    private Session session;
     
     public MgmtHistory(SQLite sqlite) {
         initComponents();
@@ -40,18 +41,21 @@ public class MgmtHistory extends javax.swing.JPanel {
 //        reportBtn.setVisible(false);
     }
 
-    public void init(int role){
+    public void init(Session session){
 //      CLEAR TABLE
         for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
             tableModel.removeRow(0);
         }
         
+        this.session = session;
+        
+        
 //      LOAD CONTENTS
         ArrayList<History> history;
-        if(role == 4)
+        if(session.getRole() == 4)
             history = sqlite.getHistory();
         else
-            history = sqlite.getHistoryOfUser("hans"); //TODO
+            history = sqlite.getHistoryOfUser(session.getUsername());
         for(int nCtr = 0; nCtr < history.size(); nCtr++){
             Product product = sqlite.getProduct(history.get(nCtr).getName());
             tableModel.addRow(new Object[]{
@@ -63,22 +67,24 @@ public class MgmtHistory extends javax.swing.JPanel {
                 history.get(nCtr).getTimestamp()
             });
         }
-        current_role = role;
-        setAccessibleFeatures(current_role);
+        setAccessibleFeatures(session.getRole());
     }
     
     public void setAccessibleFeatures(int role) {
         searchBtn.setVisible(false);
-        searchProductBtn.setVisible(false);
         reloadBtn.setVisible(false);
         
         switch(role){
             case 2:
-                searchProductBtn.setVisible(true);
+                searchBtn.setText("SEARCH PRODUCT");
+                searchBtn.setVisible(true);
+                searchBtn.setEnabled(true);
                 reloadBtn.setVisible(true);
                 break;
             case 4:
+                searchBtn.setText("SEARCH PRODUCT OR USERNAME");
                 searchBtn.setVisible(true);
+                searchBtn.setEnabled(true);
                 reloadBtn.setVisible(true);
                 break;
         }
@@ -105,7 +111,6 @@ public class MgmtHistory extends javax.swing.JPanel {
         table = new javax.swing.JTable();
         searchBtn = new javax.swing.JButton();
         reloadBtn = new javax.swing.JButton();
-        searchProductBtn = new javax.swing.JButton();
 
         table.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
         table.setModel(new javax.swing.table.DefaultTableModel(
@@ -158,10 +163,6 @@ public class MgmtHistory extends javax.swing.JPanel {
             }
         });
 
-        searchProductBtn.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        searchProductBtn.setText("SEARCH PRODUCT");
-        searchBtn.setFont(new java.awt.Font("Tahoma", 1, 14));
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -170,9 +171,7 @@ public class MgmtHistory extends javax.swing.JPanel {
                 .addGap(0, 0, 0)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(searchBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
-                        .addGap(0, 0, 0)
-                        .addComponent(searchProductBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(searchBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addGap(0, 0, 0)
                         .addComponent(reloadBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1))
@@ -186,20 +185,20 @@ public class MgmtHistory extends javax.swing.JPanel {
                 .addGap(0, 0, 0)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(reloadBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(searchBtn, javax.swing.GroupLayout.DEFAULT_SIZE, 41, Short.MAX_VALUE)
-                        .addComponent(searchProductBtn, javax.swing.GroupLayout.DEFAULT_SIZE, 41, Short.MAX_VALUE))))
+                    .addComponent(searchBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
-
-        searchBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                searchBtnActionPerformed(evt);
-            }
-        });
     }// </editor-fold>//GEN-END:initComponents
 
     
     private void searchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchBtnActionPerformed
+        if(session.getRole() == 4)
+            searchProductOrUSername();
+        else if(session.getRole() == 2)
+            searchProduct();
+    }//GEN-LAST:event_searchBtnActionPerformed
+
+    
+    private void searchProductOrUSername(){
         JTextField searchFld = new JTextField("0");
         designer(searchFld, "SEARCH USERNAME OR PRODUCT");
 
@@ -235,9 +234,9 @@ public class MgmtHistory extends javax.swing.JPanel {
                 }
             }
         }
-    }//GEN-LAST:event_searchBtnActionPerformed
-
-    private void searchProductBtnActionPerformed(java.awt.event.ActionEvent evt) {                                          
+    }
+    
+    private void searchProduct() {                                          
         JTextField searchFld = new JTextField("0");
         designer(searchFld, "SEARCH PRODUCT");
 
@@ -254,7 +253,7 @@ public class MgmtHistory extends javax.swing.JPanel {
             }
 
 //          LOAD CONTENTS
-            ArrayList<History> history = sqlite.getHistoryOfUser("hans");
+            ArrayList<History> history = sqlite.getHistoryOfUser(session.getUsername());
             for(int nCtr = 0; nCtr < history.size(); nCtr++){
                 if(searchFld.getText().contains(history.get(nCtr).getName()) || 
                    history.get(nCtr).getName().contains(searchFld.getText())){
@@ -274,7 +273,7 @@ public class MgmtHistory extends javax.swing.JPanel {
     }  
     
     private void reloadBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadBtnActionPerformed
-        init(current_role);
+        init(session);
     }//GEN-LAST:event_reloadBtnActionPerformed
 
 
@@ -282,7 +281,6 @@ public class MgmtHistory extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton reloadBtn;
     private javax.swing.JButton searchBtn;
-    private javax.swing.JButton searchProductBtn;
     private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
 }

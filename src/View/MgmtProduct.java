@@ -7,6 +7,8 @@ package View;
 
 import Controller.SQLite;
 import Model.Product;
+import Model.Session;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -21,6 +23,7 @@ public class MgmtProduct extends javax.swing.JPanel {
 
     public SQLite sqlite;
     public DefaultTableModel tableModel;
+    private Session session;
     
     public MgmtProduct(SQLite sqlite) {
         initComponents();
@@ -35,7 +38,7 @@ public class MgmtProduct extends javax.swing.JPanel {
 //        deleteBtn.setVisible(false);
     }
 
-    public void init(int role){
+    public void init(Session session){
         //      CLEAR TABLE
         for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
             tableModel.removeRow(0);
@@ -51,7 +54,8 @@ public class MgmtProduct extends javax.swing.JPanel {
         }
         
         // Authorization
-        setAccessibleFeatures(role);
+        this.session = session;
+        setAccessibleFeatures(session.getRole());
     }
     
     public void setAccessibleFeatures(int role) {
@@ -207,7 +211,21 @@ public class MgmtProduct extends javax.swing.JPanel {
             int result = JOptionPane.showConfirmDialog(null, message, "PURCHASE PRODUCT", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null);
 
             if (result == JOptionPane.OK_OPTION) {
-                System.out.println(stockFld.getText());
+                //System.out.println(stockFld.getText());
+                String product = (String) tableModel.getValueAt(table.getSelectedRow(), 0);
+                int delta = Integer.parseInt(stockFld.getText());
+                
+                if(sqlite.getProductStock(product) == 0){
+                    return;
+                }
+                if(sqlite.getProductStock(product) < delta){
+                    JOptionPane.showMessageDialog(null, "Not enough stock for purchase. Try purchasing fewer units.", "Insufficient Stock", JOptionPane.OK_OPTION);
+                    return;
+                }
+                sqlite.removeProductStock(product, delta);
+                sqlite.addHistory(session.getUsername(), product, delta,(new Timestamp(System.currentTimeMillis())).toString());
+                //sqlite.addLogs("PRODUCT", product, "Purchased by " + session.getUsername() , (new Timestamp(System.currentTimeMillis())).toString());
+                init(session);
             }
         }
     }//GEN-LAST:event_purchaseBtnActionPerformed
@@ -228,9 +246,27 @@ public class MgmtProduct extends javax.swing.JPanel {
         int result = JOptionPane.showConfirmDialog(null, message, "ADD PRODUCT", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null);
 
         if (result == JOptionPane.OK_OPTION) {
-            System.out.println(nameFld.getText());
-            System.out.println(stockFld.getText());
-            System.out.println(priceFld.getText());
+            //System.out.println(nameFld.getText());
+            //System.out.println(stockFld.getText());
+            //System.out.println(priceFld.getText());
+            String product = nameFld.getText();
+            int stock = Integer.parseInt(stockFld.getText());
+            double price = Double.parseDouble(priceFld.getText());
+            
+            if(sqlite.getProduct(product) != null){
+                JOptionPane.showMessageDialog(null, "Product already exists. Try a different name.", "Existing Product", JOptionPane.OK_OPTION);
+                return;
+            }
+                
+            
+            sqlite.addProduct(product, stock, price);
+            String name = "";
+            if(session.getRole() == 3)
+                name = "staff: " + session.getUsername();
+            else if(session.getRole() == 4)
+                name = "manager: " + session.getUsername();
+            sqlite.addLogs("PRODUCT", product, "New product added by " + name, (new Timestamp(System.currentTimeMillis())).toString());
+            init(session);
         }
     }//GEN-LAST:event_addBtnActionPerformed
 
@@ -251,9 +287,22 @@ public class MgmtProduct extends javax.swing.JPanel {
             int result = JOptionPane.showConfirmDialog(null, message, "EDIT PRODUCT", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null);
 
             if (result == JOptionPane.OK_OPTION) {
-                System.out.println(nameFld.getText());
-                System.out.println(stockFld.getText());
-                System.out.println(priceFld.getText());
+                //System.out.println(nameFld.getText());
+                //System.out.println(stockFld.getText());
+                //System.out.println(priceFld.getText());
+                String product = (String) tableModel.getValueAt(table.getSelectedRow(), 0);
+                String newName = nameFld.getText();
+                int stock = Integer.parseInt(stockFld.getText());
+                double price = Double.parseDouble(priceFld.getText());
+            
+                sqlite.updateProduct(product,newName, stock, price);
+                String name = "";
+                if(session.getRole() == 3)
+                    name = "staff: " + session.getUsername();
+                else if(session.getRole() == 4)
+                    name = "manager: " + session.getUsername();
+                sqlite.addLogs("PRODUCT", product, "Product info updated by " + name, (new Timestamp(System.currentTimeMillis())).toString());
+                init(session);
             }
         }
     }//GEN-LAST:event_editBtnActionPerformed
@@ -263,7 +312,17 @@ public class MgmtProduct extends javax.swing.JPanel {
             int result = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete " + tableModel.getValueAt(table.getSelectedRow(), 0) + "?", "DELETE PRODUCT", JOptionPane.YES_NO_OPTION);
             
             if (result == JOptionPane.YES_OPTION) {
-                System.out.println(tableModel.getValueAt(table.getSelectedRow(), 0));
+                //System.out.println(tableModel.getValueAt(table.getSelectedRow(), 0));
+                String product = (String) tableModel.getValueAt(table.getSelectedRow(), 0);
+                String name = "";
+                if(session.getRole() == 3)
+                    name = "staff: " + session.getUsername();
+                else if(session.getRole() == 4)
+                    name = "manager: " + session.getUsername();
+                
+                sqlite.removeProduct(product);
+                sqlite.addLogs("PRODUCT", product, "Product removed by " + name, (new Timestamp(System.currentTimeMillis())).toString());
+                init(session);
             }
         }
     }//GEN-LAST:event_deleteBtnActionPerformed

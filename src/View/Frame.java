@@ -1,6 +1,7 @@
 package View;
 
 import Controller.Main;
+import Model.Session;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
@@ -13,6 +14,8 @@ import java.util.Random;
 import javax.crypto.spec.PBEKeySpec;
 
 public class Frame extends javax.swing.JFrame {
+    
+    private Session session;
 
     public Frame() {
         initComponents();
@@ -220,13 +223,22 @@ public class Frame extends javax.swing.JFrame {
     }//GEN-LAST:event_clientBtnActionPerformed
 
     private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutBtnActionPerformed
+        main.sqlite.addLogs("LOGOUT", session.getUsername(), "Logged out", (new Timestamp(System.currentTimeMillis())).toString());
         loginNav();
     }//GEN-LAST:event_logoutBtnActionPerformed
 
     private void accountBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accountBtnActionPerformed
         contentView.show(Content, "accountHomePnl");
     }//GEN-LAST:event_accountBtnActionPerformed
-
+    
+    private void updateCurrentSession(){
+        adminHomePnl.setSession(session);
+        clientHomePnl.setSession(session);
+        managerHomePnl.setSession(session);
+        staffHomePnl.setSession(session);
+        accountHomePnl.setSession(session);
+    }
+    
     public Main main;
     public Login loginPnl = new Login();
     public Register registerPnl = new Register();
@@ -272,7 +284,38 @@ public class Frame extends javax.swing.JFrame {
     }
     
     public void mainNav(){
+        setAccessibleFeatures();
         frameView.show(Container, "homePnl");
+    }
+    
+    private void setAccessibleFeatures(){
+        adminBtn.setVisible(false);
+        managerBtn.setVisible(false);
+        staffBtn.setVisible(false);
+        clientBtn.setVisible(false);
+        
+        switch(session.getRole()){
+            case 2: 
+                clientBtn.setVisible(true); 
+                clientHomePnl.showPnl("home");
+                contentView.show(Content, "clientHomePnl");
+                break;
+            case 3: 
+                staffBtn.setVisible(true);
+                staffHomePnl.showPnl("home");
+                contentView.show(Content, "staffHomePnl");
+                break;
+            case 4: 
+                managerBtn.setVisible(true);
+                managerHomePnl.showPnl("home");
+                contentView.show(Content, "managerHomePnl");
+                break;
+            case 5: 
+                adminBtn.setVisible(true);
+                adminHomePnl.showPnl("home");
+                contentView.show(Content, "adminHomePnl");
+                break; 
+        }
     }
     
     public void loginNav(){
@@ -325,7 +368,7 @@ public class Frame extends javax.swing.JFrame {
 
         main.sqlite.addUser(username, password);
         registerPnl.setMessage("Successfully registered.", 1);
-        main.sqlite.addLogs("REGISTER", username, "Successful account creation", (new Timestamp(System.currentTimeMillis())).toString());
+        main.sqlite.addLogs("USER", username, "Account created", (new Timestamp(System.currentTimeMillis())).toString());
         registerPnl.clearInfo();
         //loginNav();
     }
@@ -339,6 +382,8 @@ public class Frame extends javax.swing.JFrame {
         if(main.sqlite.checkUserCredentials(username,password)){
             loginPnl.setMessage("Successfully logged in.");
             main.sqlite.addLogs("LOGIN", username, "Successful login", (new Timestamp(System.currentTimeMillis())).toString());
+            session = main.sqlite.getSessionInfo(username);
+            updateCurrentSession();
             mainNav();
         }
         else{
@@ -346,6 +391,9 @@ public class Frame extends javax.swing.JFrame {
             loginPnl.setMessage("Invalid username or password.");
             main.sqlite.addLogs("LOGIN", username, "Invalid login", (new Timestamp(System.currentTimeMillis())).toString());
             main.sqlite.incrementUserLocked(username);
+            if(main.sqlite.getUserLocked(username)){
+               main.sqlite.addLogs("USER", username, "Account locked due to login attempts", (new Timestamp(System.currentTimeMillis())).toString());
+            }
         
             attempts+=1;
         }
