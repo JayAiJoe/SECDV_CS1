@@ -1,3 +1,14 @@
+===============
+SAMPLE ACCOUNTS
+===============
+role		username		password
+5		admin			Admin1234!
+4		manager		Manager1!
+3		staff			Staff1234!
+2		TestAccount456	TestAccount456!
+2		Case2			CaseStudy2!
+
+
 ========================
 BUILD OUTPUT DESCRIPTION
 ========================

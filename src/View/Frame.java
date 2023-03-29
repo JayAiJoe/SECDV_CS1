@@ -224,6 +224,7 @@ public class Frame extends javax.swing.JFrame {
 
     private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutBtnActionPerformed
         main.sqlite.addLogs("LOGOUT", session.getUsername(), "Logged out", (new Timestamp(System.currentTimeMillis())).toString());
+        session = null;
         loginNav();
     }//GEN-LAST:event_logoutBtnActionPerformed
 

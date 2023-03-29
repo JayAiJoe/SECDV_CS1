@@ -17,14 +17,14 @@ import java.util.Random;
 public class SQLite {
     
     public int DEBUG_MODE = 0;
-   String driverURL = "jdbc:sqlite:" + "database.db";
-    //String driverURL = "jdbc:sqlite::resource:database.db";
+   //String driverURL = "jdbc:sqlite:" + "database.db";
+    String driverURL = "jdbc:sqlite::resource:database.db";
     
     public void createNewDatabase() {
         try (Connection conn = DriverManager.getConnection(driverURL)) {
             if (conn != null) {
                 DatabaseMetaData meta = conn.getMetaData();
-                System.out.println("Database database.db created.");
+                //System.out.println("Database database.db created.");
             }
         } catch (Exception ex) {
             System.out.print(ex);
@@ -43,9 +43,9 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table history in database.db created.");
+            //System.out.println("Table history in database.db created.");
         } catch (Exception ex) {
-            System.out.print(ex);
+            //System.out.print(ex);
         }
     }
     
@@ -61,7 +61,7 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table logs in database.db created.");
+            //System.out.println("Table logs in database.db created.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -78,7 +78,7 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table product in database.db created.");
+            //System.out.println("Table product in database.db created.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -96,7 +96,7 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table users in database.db created.");
+            //System.out.println("Table users in database.db created.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -108,7 +108,7 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table history in database.db dropped.");
+            //System.out.println("Table history in database.db dropped.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -120,7 +120,7 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table logs in database.db dropped.");
+            //System.out.println("Table logs in database.db dropped.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -132,7 +132,7 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table product in database.db dropped.");
+            //System.out.println("Table product in database.db dropped.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -144,18 +144,23 @@ public class SQLite {
         try (Connection conn = DriverManager.getConnection(driverURL);
             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table users in database.db dropped.");
+            //System.out.println("Table users in database.db dropped.");
         } catch (Exception ex) {
             System.out.print(ex);
         }
     }
     
+    
     public void addHistory(String username, String name, int stock, String timestamp) {
-        String sql = "INSERT INTO history(username,name,stock,timestamp) VALUES('" + username + "','" + name + "','" + stock + "','" + timestamp + "')";
+        String sql = "INSERT INTO history(username,name,stock,timestamp) VALUES(?,?,?,?)";
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()){
-            stmt.execute(sql);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, name);
+                pstmt.setInt(3, stock);
+                pstmt.setString(4, timestamp);
+                pstmt.executeUpdate();
         } catch (Exception ex) {
             System.out.print(ex);
         }
@@ -176,33 +181,19 @@ public class SQLite {
         }
     }
     
+
     public void addProduct(String name, int stock, double price) {
-        String sql = "INSERT INTO product(name,stock,price) VALUES('" + name + "','" + stock + "','" + price + "')";
+        String sql = "INSERT INTO product(name,stock,price) VALUES(?,?,?)";
         
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement()){
-            stmt.execute(sql);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                pstmt.setInt(2, stock);
+                pstmt.setDouble(3, price);
+                pstmt.executeUpdate();
         } catch (Exception ex) {
             System.out.print(ex);
         }
-    }
-
-    public static String hashPassword(char[] password,byte[] salt){
-        KeySpec secret = new PBEKeySpec(password,salt, 65535, 128);
-
-        try{
-            SecretKeyFactory fact = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-            byte[] hashed = fact.generateSecret(secret).getEncoded();
-
-            String hash = Base64.getEncoder().encodeToString(hashed);
-            String ssalt = Base64.getEncoder().encodeToString(salt);
-            return hash+ssalt;
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return "";
     }
     
     public void addUser(String username, String password) {
@@ -485,21 +476,24 @@ public class SQLite {
         }
     }
     
-    
     public Product getProduct(String name){
-        String sql = "SELECT name, stock, price FROM product WHERE name='" + name + "';";
+        String sql = "SELECT name, stock, price FROM product WHERE name=?;";
         Product product = null;
         try (Connection conn = DriverManager.getConnection(driverURL);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)){
-            product = new Product(rs.getString("name"),
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                ResultSet rs = pstmt.executeQuery();
+                while(rs.next()){
+                    product = new Product(rs.getString("name"),
                                    rs.getInt("stock"),
                                    rs.getFloat("price"));
+                }
         } catch (Exception ex) {
             System.out.print(ex);
         }
         return product;
     }
+    
     
     public void updatePassword(String username, String newPassword){
         String sql = "UPDATE users SET password = ?  WHERE username=?";
@@ -582,6 +576,77 @@ public class SQLite {
         } catch (Exception ex) {
             System.out.print(ex);
         }
+    }
+    
+    
+    //Utility Function
+    public static String hashPassword(char[] password,byte[] salt){
+        KeySpec secret = new PBEKeySpec(password,salt, 65535, 128);
+
+        try{
+            SecretKeyFactory fact = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+            byte[] hashed = fact.generateSecret(secret).getEncoded();
+
+            String hash = Base64.getEncoder().encodeToString(hashed);
+            String ssalt = Base64.getEncoder().encodeToString(salt);
+            return hash+ssalt;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return "";
+    }
+    
+    public static boolean validatePositiveInt(String input){
+        String regex = "^[0-9]+$";
+        if(!input.matches(regex))
+            return false;
+        try{
+            if(Integer.parseInt(input) <= 0)
+                return false;
+            if(Integer.parseInt(input) > Integer.MAX_VALUE)
+                return false; 
+        }catch(Exception e){
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static boolean validateNonZeroPositiveDouble(String input){
+        String regex = "^[0-9]*[.]?[0-9]+$";
+        if(!input.matches(regex))
+            return false;
+        try{
+            double val = Double.parseDouble(input);
+            if(Double.parseDouble(input) < 0)
+                return false;
+            if(Double.parseDouble(input) > Double.MAX_VALUE)
+                return false;
+        }
+        catch(Exception e){
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static boolean validateStringInputLength(String input){
+        if(input.length() <= 0)
+            return false;
+        if(input.length() > 100)
+            return false;
+        return true;
+    }
+    
+    public static boolean validateSafeStringInput(String input){
+        String regex = "^[^><;]+$";
+        return input.matches(regex);
+    }
+    
+    public static String scriptFilter(String input){
+        return input.replaceAll("[<>;]", "");
     }
         
 }

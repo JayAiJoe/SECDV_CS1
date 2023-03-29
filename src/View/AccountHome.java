@@ -39,7 +39,7 @@ public class AccountHome extends javax.swing.JPanel {
     public void setSession(Session session){
         this.session = session;
         if(session != null)
-            userLabel.setText(session.getUsername());
+            userLabel.setText(sqlite.scriptFilter(session.getUsername()));
     }
 
     /**

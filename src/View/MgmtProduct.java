@@ -39,6 +39,9 @@ public class MgmtProduct extends javax.swing.JPanel {
     }
 
     public void init(Session session){
+        
+        this.session = session;
+        
         //      CLEAR TABLE
         for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
             tableModel.removeRow(0);
@@ -48,13 +51,13 @@ public class MgmtProduct extends javax.swing.JPanel {
         ArrayList<Product> products = sqlite.getProduct();
         for(int nCtr = 0; nCtr < products.size(); nCtr++){
             tableModel.addRow(new Object[]{
-                products.get(nCtr).getName(), 
+                sqlite.scriptFilter(products.get(nCtr).getName()), 
                 products.get(nCtr).getStock(), 
                 products.get(nCtr).getPrice()});
         }
         
         // Authorization
-        this.session = session;
+        
         setAccessibleFeatures(session.getRole());
     }
     
@@ -213,18 +216,18 @@ public class MgmtProduct extends javax.swing.JPanel {
             if (result == JOptionPane.OK_OPTION) {
                 //System.out.println(stockFld.getText());
                 String product = (String) tableModel.getValueAt(table.getSelectedRow(), 0);
-                int delta = Integer.parseInt(stockFld.getText());
-                
-                if(sqlite.getProductStock(product) == 0){
+                if(!sqlite.validatePositiveInt(stockFld.getText())){
+                    JOptionPane.showMessageDialog(null, "Invalid stock amount.", "Invalid Purchase", JOptionPane.OK_OPTION);
                     return;
                 }
+                
+                int delta = Integer.parseInt(stockFld.getText());
                 if(sqlite.getProductStock(product) < delta){
                     JOptionPane.showMessageDialog(null, "Not enough stock for purchase. Try purchasing fewer units.", "Insufficient Stock", JOptionPane.OK_OPTION);
                     return;
                 }
                 sqlite.removeProductStock(product, delta);
                 sqlite.addHistory(session.getUsername(), product, delta,(new Timestamp(System.currentTimeMillis())).toString());
-                //sqlite.addLogs("PRODUCT", product, "Purchased by " + session.getUsername() , (new Timestamp(System.currentTimeMillis())).toString());
                 init(session);
             }
         }
@@ -249,6 +252,25 @@ public class MgmtProduct extends javax.swing.JPanel {
             //System.out.println(nameFld.getText());
             //System.out.println(stockFld.getText());
             //System.out.println(priceFld.getText());
+            if(!sqlite.validateSafeStringInput(nameFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid name symbols.", "Invalid Add", JOptionPane.OK_OPTION);
+                return;
+            }
+            if(!sqlite.validateStringInputLength(nameFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid name length.", "Invalid Add", JOptionPane.OK_OPTION);
+                return;
+            }
+            if(!sqlite.validatePositiveInt(stockFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid stock amount.", "Invalid Add", JOptionPane.OK_OPTION);
+                return;
+            }
+            if(!sqlite.validateNonZeroPositiveDouble(priceFld.getText())){
+                    JOptionPane.showMessageDialog(null, "Invalid price.", "Invalid Add", JOptionPane.OK_OPTION);
+                    return;
+                }
+            
+            
+            
             String product = nameFld.getText();
             int stock = Integer.parseInt(stockFld.getText());
             double price = Double.parseDouble(priceFld.getText());
@@ -290,6 +312,24 @@ public class MgmtProduct extends javax.swing.JPanel {
                 //System.out.println(nameFld.getText());
                 //System.out.println(stockFld.getText());
                 //System.out.println(priceFld.getText());
+                if(!sqlite.validateSafeStringInput(nameFld.getText())){
+                    JOptionPane.showMessageDialog(null, "Invalid name symbols.", "Invalid Edit", JOptionPane.OK_OPTION);
+                    return;
+                }
+                if(!sqlite.validateStringInputLength(nameFld.getText())){
+                    JOptionPane.showMessageDialog(null, "Invalid name length.", "Invalid Edit", JOptionPane.OK_OPTION);
+                    return;
+                }
+                if(!sqlite.validatePositiveInt(stockFld.getText())){
+                    JOptionPane.showMessageDialog(null, "Invalid stock amount.", "Invalid Edit", JOptionPane.OK_OPTION);
+                    return;
+                }
+                if(!sqlite.validateNonZeroPositiveDouble(priceFld.getText())){
+                    JOptionPane.showMessageDialog(null, "Invalid price.", "Invalid Edit", JOptionPane.OK_OPTION);
+                    return;
+                }
+                
+                
                 String product = (String) tableModel.getValueAt(table.getSelectedRow(), 0);
                 String newName = nameFld.getText();
                 int stock = Integer.parseInt(stockFld.getText());

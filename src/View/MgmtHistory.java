@@ -59,8 +59,8 @@ public class MgmtHistory extends javax.swing.JPanel {
         for(int nCtr = 0; nCtr < history.size(); nCtr++){
             Product product = sqlite.getProduct(history.get(nCtr).getName());
             tableModel.addRow(new Object[]{
-                history.get(nCtr).getUsername(), 
-                history.get(nCtr).getName(), 
+                sqlite.scriptFilter(history.get(nCtr).getUsername()), 
+                sqlite.scriptFilter(history.get(nCtr).getName()), 
                 history.get(nCtr).getStock(), 
                 product.getPrice(), 
                 product.getPrice() * history.get(nCtr).getStock(), 
@@ -209,6 +209,14 @@ public class MgmtHistory extends javax.swing.JPanel {
         int result = JOptionPane.showConfirmDialog(null, message, "SEARCH HISTORY", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null);
 
         if (result == JOptionPane.OK_OPTION) {
+            if(!sqlite.validateSafeStringInput(searchFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid search term symbols.", "Invalid Search", JOptionPane.OK_OPTION);
+                return;
+            }
+            if(!sqlite.validateStringInputLength(searchFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid search term length.", "Invalid Search", JOptionPane.OK_OPTION);
+                return;
+            }
 //          CLEAR TABLE
             for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
                 tableModel.removeRow(0);
@@ -247,6 +255,15 @@ public class MgmtHistory extends javax.swing.JPanel {
         int result = JOptionPane.showConfirmDialog(null, message, "SEARCH HISTORY", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null);
 
         if (result == JOptionPane.OK_OPTION) {
+            if(!sqlite.validateSafeStringInput(searchFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid search term symbols.", "Invalid Search", JOptionPane.OK_OPTION);
+                return;
+            }
+            if(!sqlite.validateStringInputLength(searchFld.getText())){
+                JOptionPane.showMessageDialog(null, "Invalid search term length.", "Invalid Search", JOptionPane.OK_OPTION);
+                return;
+            }
+            
 //          CLEAR TABLE
             for(int nCtr = tableModel.getRowCount(); nCtr > 0; nCtr--){
                 tableModel.removeRow(0);

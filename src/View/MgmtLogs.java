@@ -46,9 +46,9 @@ public class MgmtLogs extends javax.swing.JPanel {
         ArrayList<Logs> logs = sqlite.getLogs();
         for(int nCtr = 0; nCtr < logs.size(); nCtr++){
             tableModel.addRow(new Object[]{
-                logs.get(nCtr).getEvent(), 
-                logs.get(nCtr).getUsername(), 
-                logs.get(nCtr).getDesc(), 
+                sqlite.scriptFilter(logs.get(nCtr).getEvent()), 
+                sqlite.scriptFilter(logs.get(nCtr).getUsername()), 
+                sqlite.scriptFilter(logs.get(nCtr).getDesc()), 
                 logs.get(nCtr).getTimestamp()});
         }
     }
